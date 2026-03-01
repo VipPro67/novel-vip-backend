@@ -88,9 +88,9 @@ public class GoogleTTSService implements TextToSpeechService {
 
             // Build parameters (Reused for all chunks)
             VoiceSelectionParams voice = VoiceSelectionParams.newBuilder()
-                    .setLanguageCode("vi-VN")
-                    .setSsmlGender(SsmlVoiceGender.NEUTRAL)
-                    .build();
+                .setLanguageCode("vi-VN")
+                .setName("vi-VN-Standard-A")
+                .build();
 
             AudioConfig audioConfig = AudioConfig.newBuilder()
                     .setAudioEncoding(AudioEncoding.MP3)
