@@ -1,0 +1,12 @@
+**/target
+**/logs
+.env
+**/node_modules
+**/dist
+**/output
+src/main/resources/novelvip.json
+.vscode
+.github/skills
+*.node_modules
+*.md
+src/main/resources/application-local.properties
