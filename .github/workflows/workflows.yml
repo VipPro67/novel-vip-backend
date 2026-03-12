@@ -1,0 +1,41 @@
+name: Deploy to Lightsail
+
+on:
+  push:
+    branches:
+      - main
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code with submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H ${{ secrets.HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy via SSH
+        run: |
+          ssh -i ~/.ssh/id_ed25519 deploy@${{ secrets.HOST }} << 'EOF'
+            set -e
+            # 1. Go to the parent directory
+            cd /home/deploy/novel-vip
+
+            # 2. Update the parent repo and the submodules
+            git fetch origin main
+            git reset --hard origin/main
+            git submodule update --init --recursive
+
+            # 3. Build and Restart
+            echo "🧱 Rebuilding Docker containers..."
+            # Note: This assumes your docker-compose.yml is in /home/deploy/novel-vip
+            docker compose down
+            docker compose up -d --build
+          EOF
