@@ -128,4 +128,25 @@ public interface NovelRepository extends JpaRepository<Novel, UUID> {
     
     @Query("SELECT COUNT(c) FROM Chapter c WHERE c.novel.id = :novelId")
     long countChaptersByNovelId(@Param("novelId") UUID novelId);
+
+    @Query("SELECT COUNT(n) FROM Novel n WHERE n.createdAt >= :startDate")
+    long countByCreatedAtAfter(@Param("startDate") java.time.Instant startDate);
+
+    @Query("SELECT SUM(n.totalViews) FROM Novel n")
+    Long sumTotalViews();
+
+    @Query("SELECT COUNT(n) FROM Novel n WHERE n.rating >= :minRating")
+    long countByRatingGreaterThanEqual(@Param("minRating") Integer minRating);
+
+    @Query("SELECT COUNT(n) FROM Novel n WHERE n.rating >= :minRating AND n.rating < :maxRating")
+    long countByRatingBetween(@Param("minRating") Integer minRating, @Param("maxRating") Integer maxRating);
+
+    @Query("SELECT COUNT(n) FROM Novel n WHERE n.rating >= 5")
+    long countFiveStarNovels();
+
+    @Query("SELECT COUNT(n) FROM Novel n WHERE n.updatedAt >= :startDate")
+    long countByUpdatedAtAfter(@Param("startDate") java.time.Instant startDate);
+
+    @Query("SELECT COUNT(n) FROM Novel n WHERE n.totalViews > 100000 AND n.rating >= 4")
+    long countHallOfFameNovels();
 }

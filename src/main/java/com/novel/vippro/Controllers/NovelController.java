@@ -5,6 +5,7 @@ import com.novel.vippro.DTO.System.SystemJobDTO;
 import com.novel.vippro.DTO.Novel.NovelCreateDTO;
 import com.novel.vippro.DTO.Novel.NovelDTO;
 import com.novel.vippro.DTO.Novel.NovelSearchDTO;
+import com.novel.vippro.DTO.Novel.NovelStatsDTO;
 import com.novel.vippro.Models.Chapter;
 import com.novel.vippro.Payload.Response.ControllerResponse;
 import com.novel.vippro.Payload.Response.PageResponse;
@@ -206,6 +207,13 @@ public class NovelController {
         return ControllerResponse.success("Hot novels retrieved successfully", novels);
     }
 
+    @Operation(summary = "Get hot novels stats", description = "Get statistics for hot novels")
+    @GetMapping("/hot/stats")
+    public ControllerResponse<NovelStatsDTO> getHotNovelsStats() {
+        NovelStatsDTO stats = novelService.getHotNovelStats();
+        return ControllerResponse.success("Hot novels stats retrieved successfully", stats);
+    }
+
     @Operation(summary = "Get top rated novels", description = "Get novels sorted by rating")
     @GetMapping("/top-rated")
     public ControllerResponse<PageResponse<NovelDTO>> getTopRatedNovels(
@@ -217,6 +225,13 @@ public class NovelController {
         Pageable pageable = PageRequest.of(page, size, sort);
         PageResponse<NovelDTO> novels = novelService.getTopRatedNovels(pageable);
         return ControllerResponse.success("Top rated novels retrieved successfully", novels);
+    }
+
+    @Operation(summary = "Get top rated novels stats", description = "Get statistics for top rated novels")
+    @GetMapping("/top-rated/stats")
+    public ControllerResponse<NovelStatsDTO> getTopRatedNovelsStats() {
+        NovelStatsDTO stats = novelService.getTopRatedNovelStats();
+        return ControllerResponse.success("Top rated novels stats retrieved successfully", stats);
     }
 
     // latest updated novels
@@ -231,6 +246,13 @@ public class NovelController {
         Pageable pageable = PageRequest.of(page, size, sort);
         PageResponse<NovelDTO> novels = novelService.getLatestUpdatedNovels(pageable);
         return ControllerResponse.success("Latest updated novels retrieved successfully", novels);
+    }
+
+    @Operation(summary = "Get latest updates stats", description = "Get statistics for latest updated novels")
+    @GetMapping("/latest-updates/stats")
+    public ControllerResponse<NovelStatsDTO> getLatestUpdatedNovelsStats() {
+        NovelStatsDTO stats = novelService.getLatestUpdatesStats();
+        return ControllerResponse.success("Latest updated novels stats retrieved successfully", stats);
     }
 
     @Operation(summary = "Get chapters by novel", description = "Retrieve chapters of a specific novel")

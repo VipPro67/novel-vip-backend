@@ -4,6 +4,7 @@ import com.novel.vippro.DTO.Chapter.CreateChapterDTO;
 import com.novel.vippro.DTO.Novel.NovelCreateDTO;
 import com.novel.vippro.DTO.Novel.NovelDTO;
 import com.novel.vippro.DTO.Novel.NovelSearchDTO;
+import com.novel.vippro.DTO.Novel.NovelStatsDTO;
 import com.novel.vippro.Exception.ResourceNotFoundException;
 import com.novel.vippro.Mapper.Mapper;
 import com.novel.vippro.Models.Category;
@@ -11,10 +12,13 @@ import com.novel.vippro.Models.FileMetadata;
 import com.novel.vippro.Utils.EpubParseResult;
 import com.novel.vippro.Models.Genre;
 import com.novel.vippro.Models.Novel;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import com.novel.vippro.Models.Tag;
 import com.novel.vippro.Models.User;
 import com.novel.vippro.Payload.Response.PageResponse;
 import com.novel.vippro.Repository.CategoryRepository;
+import com.novel.vippro.Repository.ChapterRepository;
 import com.novel.vippro.Repository.GenreRepository;
 import com.novel.vippro.Repository.NovelRepository;
 import com.novel.vippro.Repository.TagRepository;
@@ -79,6 +83,9 @@ public class NovelService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private ChapterRepository chapterRepository;
 
     @Autowired
     private CacheManager cacheManager;
@@ -241,6 +248,47 @@ public class NovelService {
     public PageResponse<NovelDTO> getHotNovels(Pageable pageable) {
         Page<Novel> novels = novelRepository.findByMinimumRating(4, pageable);
         return new PageResponse<>(novels.map(mapper::NoveltoDTO));
+    }
+
+    @Transactional(readOnly = true)
+    public NovelStatsDTO getHotNovelStats() {
+        return NovelStatsDTO.builder()
+                .mostViewedWeek(1200000L) // mock
+                .risingStars(45L) // mock
+                .popularAvgRating(4.8) // mock
+                .hotStreakDays(7L) // mock
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public NovelStatsDTO getTopRatedNovelStats() {
+        long fiveStar = novelRepository.countFiveStarNovels();
+        long fourPlus = novelRepository.countByRatingBetween(4, 5); 
+        long hallOfFame = novelRepository.countHallOfFameNovels();
+        return NovelStatsDTO.builder()
+                .fiveStarNovels(fiveStar)
+                .fourPlusStarNovels(fourPlus)
+                .hallOfFame(hallOfFame)
+                .highlyRatedAvg(4.7) // mock
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public NovelStatsDTO getLatestUpdatesStats() {
+        Instant now = Instant.now();
+        Instant last24Hours = now.minus(24, ChronoUnit.HOURS);
+        Instant last7Days = now.minus(7, ChronoUnit.DAYS);
+
+        long updatedToday = novelRepository.countByUpdatedAtAfter(last24Hours);
+        long updatedThisWeek = novelRepository.countByUpdatedAtAfter(last7Days);
+        long freshChapters = chapterRepository.countByCreatedAtAfter(last24Hours);
+        
+        return NovelStatsDTO.builder()
+                .updatedToday(updatedToday)
+                .updatedThisWeek(updatedThisWeek)
+                .regularUpdates(1200L) // mock
+                .freshChapters(freshChapters)
+                .build();
     }
 
     @Transactional

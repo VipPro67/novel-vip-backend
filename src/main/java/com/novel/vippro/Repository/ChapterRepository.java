@@ -33,4 +33,6 @@ public interface ChapterRepository extends JpaRepository<Chapter, UUID> {
     @Query("SELECT c.chapterNumber FROM Chapter c WHERE c.novel.id = ?1")
     List<Integer> findChapterNumbersByNovelId(UUID novelId);
 
+    @Query("SELECT COUNT(c) FROM Chapter c WHERE c.createdAt >= :startDate")
+    long countByCreatedAtAfter(@org.springframework.data.repository.query.Param("startDate") java.time.Instant startDate);
 }

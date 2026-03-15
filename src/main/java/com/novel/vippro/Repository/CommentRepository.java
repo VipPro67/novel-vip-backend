@@ -23,4 +23,7 @@ public interface CommentRepository extends JpaRepository<Comment, UUID> {
 
     @Query("SELECT c FROM Comment c WHERE c.parent.id = ?1 ORDER BY c.createdAt ASC")
     Page<Comment> findByParentIdOrderByCreatedAtAsc(UUID parentId, Pageable pageable);
+
+    @Query("SELECT COUNT(c) FROM Comment c WHERE c.createdAt >= :startDate")
+    long countByCreatedAtAfter(@org.springframework.data.repository.query.Param("startDate") java.time.Instant startDate);
 }

@@ -35,4 +35,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
                         Pageable pageable);
 
         Optional<User> findByEmailVerificationToken(String emailVerificationToken);
+
+        @Query("SELECT COUNT(u) FROM User u WHERE u.createdAt >= :startDate")
+        long countByCreatedAtAfter(@Param("startDate") java.time.Instant startDate);
 }
