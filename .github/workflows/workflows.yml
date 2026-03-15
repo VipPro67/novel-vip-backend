@@ -35,7 +35,7 @@ jobs:
 
             # 3. Build and Restart
             echo "🧱 Rebuilding Docker containers..."
-            # Note: This assumes your docker-compose.yml is in /home/deploy/novel-vip
+            cd backend
             docker compose down
             docker compose up -d --build
           EOF

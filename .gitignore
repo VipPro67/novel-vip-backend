@@ -6,7 +6,7 @@
 **/output
 src/main/resources/novelvip.json
 .vscode
-.github/skills
+.github/skills/
 *.node_modules
 *.md
 src/main/resources/application-local.properties

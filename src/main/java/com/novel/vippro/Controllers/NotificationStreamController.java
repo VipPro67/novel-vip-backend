@@ -2,8 +2,6 @@ package com.novel.vippro.Controllers;
 
 import com.novel.vippro.Security.UserDetailsImpl;
 import jakarta.servlet.http.HttpServletResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -29,7 +27,6 @@ import java.util.concurrent.TimeUnit;
 @PreAuthorize("isAuthenticated()")
 public class NotificationStreamController {
 
-    private static final Logger logger = LoggerFactory.getLogger(NotificationStreamController.class);
     private static final long SSE_TIMEOUT = 5 * 60 * 1000L;
     private static final long HEARTBEAT_INTERVAL = 15 * 1000L;
 
