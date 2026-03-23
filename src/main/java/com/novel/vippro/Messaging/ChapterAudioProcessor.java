@@ -11,13 +11,11 @@ import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@ConditionalOnProperty(name = "app.messaging.provider", havingValue = "rabbitmq", matchIfMissing = true)
 public class ChapterAudioProcessor {
 
     private static final Logger logger = LoggerFactory.getLogger(ChapterAudioProcessor.class);
@@ -25,13 +23,16 @@ public class ChapterAudioProcessor {
     private final ChapterService chapterService;
     private final EpubImportProcessor epubImportProcessor;
     private final NotificationService notificationService;
+    private final NovelVipPublisher novelVipPublisher;
 
     public ChapterAudioProcessor(ChapterService chapterService,
             EpubImportProcessor epubImportProcessor,
-            NotificationService notificationService) {
+            NotificationService notificationService,
+            NovelVipPublisher novelVipPublisher) {
         this.chapterService = chapterService;
         this.epubImportProcessor = epubImportProcessor;
         this.notificationService = notificationService;
+        this.novelVipPublisher = novelVipPublisher;
     }
 
     @Transactional
@@ -45,6 +46,18 @@ public class ChapterAudioProcessor {
             Chapter chapter = chapterService.ensureChapterAudioGenerated(message.getChapterId());
             epubImportProcessor.markChapterAudioComplete(message.getJobId());
             notifySuccess(message, chapter);
+
+            // Push real-time WebSocket notification so the frontend immediately
+            // gets the audio URL without waiting for the polling fallback.
+            if (chapter.getAudioUrl() != null) {
+                try {
+                    novelVipPublisher.publishAudioReady(
+                            message.getChapterId().toString(),
+                            chapter.getAudioUrl());
+                } catch (Exception ex) {
+                    logger.warn("Failed to push audio-ready WebSocket event for chapter {}", message.getChapterId(), ex);
+                }
+            }
         } catch (Exception ex) {
             logger.error("Failed to generate audio for chapter {}", message.getChapterId(), ex);
             epubImportProcessor.markJobFailed(message.getJobId(),
