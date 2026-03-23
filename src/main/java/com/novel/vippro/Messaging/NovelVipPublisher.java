@@ -52,9 +52,9 @@ public class NovelVipPublisher {
      * Destination matches the frontend subscription at
      * {@code /topic/chapter.<chapterId>.audio}.
      */
-    public void publishAudioReady(String chapterId, String audioUrl) {
+    public void publishAudioReady(String chapterId) {
         messagingTemplate.convertAndSend(
                 "/topic/chapter." + chapterId + ".audio",
-                Map.of("audioUrl", audioUrl, "chapterId", chapterId));
+                Map.of("audioUrl", "/api/chapters/" + chapterId + "/audio", "chapterId", chapterId));
     }
 }

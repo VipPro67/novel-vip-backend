@@ -49,11 +49,10 @@ public class ChapterAudioProcessor {
 
             // Push real-time WebSocket notification so the frontend immediately
             // gets the audio URL without waiting for the polling fallback.
-            if (chapter.getAudioUrl() != null) {
+            if (chapter.getAudioFile() != null) {
                 try {
                     novelVipPublisher.publishAudioReady(
-                            message.getChapterId().toString(),
-                            chapter.getAudioUrl());
+                            message.getChapterId().toString());
                 } catch (Exception ex) {
                     logger.warn("Failed to push audio-ready WebSocket event for chapter {}", message.getChapterId(), ex);
                 }

@@ -52,7 +52,7 @@ public class EpubImportService {
         logger.info("Queueing EPUB import for new novel slug={} by user={}", slug, userId);
         FileMetadata metadata;
         try {
-            String publicId = String.format("novels/%s/epubs/", slug);
+            String publicId = String.format("novels/%s/epubs/%s", slug,slug);
             metadata = fileService.uploadFileWithPublicId(epub.getBytes(), publicId, epub.getOriginalFilename(), epub.getContentType(), "epub");
         } catch (IOException e) {
             throw new RuntimeException("Failed to read EPUB file content", e);
@@ -82,7 +82,7 @@ public class EpubImportService {
 
         FileMetadata metadata;
         try {
-            String publicId = String.format("novels/%s/epubs/", novel.getSlug());
+            String publicId = String.format("novels/%s/epubs/%s", novel.getSlug(), novel.getSlug());
             metadata = fileService.uploadFileWithPublicId(epub.getBytes(), publicId, epub.getOriginalFilename(), epub.getContentType(), "epub");
         } catch (IOException e) {
             throw new RuntimeException("Failed to read EPUB file content", e);

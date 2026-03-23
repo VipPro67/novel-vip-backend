@@ -442,7 +442,7 @@ public class NovelService {
         Novel novel = novelRepository.findById(novelId)
                 .orElseThrow(() -> new ResourceNotFoundException("Novel", "id", novelId));
         try {
-            String publicId = String.format("novels/%s/cover/", novel.getSlug());
+            String publicId = String.format("novels/%s/cover/%s", novel.getSlug(),novelId);
             FileMetadata cover = fileService.uploadFileWithPublicId(
                     coverImage.getBytes(), publicId, coverImage.getOriginalFilename(), "image/jpeg", "jpeg");
             novel.setCoverImage(cover);
