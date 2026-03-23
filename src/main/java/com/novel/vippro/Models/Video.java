@@ -36,6 +36,11 @@ public class Video extends BaseEntity {
     @Column
     private String externalId;
 
+    @jakarta.persistence.ManyToOne(fetch = jakarta.persistence.FetchType.LAZY)
+    @jakarta.persistence.JoinColumn(name = "video_series_id")
+    @com.fasterxml.jackson.annotation.JsonBackReference("video-series-videos")
+    private VideoSeries videoSeries;
+
     public enum VideoPlatform {
         YOUTUBE,
         FACEBOOK

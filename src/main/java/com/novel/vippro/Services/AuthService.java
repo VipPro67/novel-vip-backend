@@ -125,7 +125,7 @@ public class AuthService {
             // Generate persisted refresh token
             RefreshToken refreshToken = createRefreshToken(userDetails.getId());
 
-            JwtResponse jwtResponse = new JwtResponse(jwt, "Bearer",
+            JwtResponse jwtResponse = new JwtResponse(
                     userDetails.getId(),
                     userDetails.getUsername(),
                     userDetails.getEmail(),
@@ -133,10 +133,12 @@ public class AuthService {
                     refreshToken.getExpiresAt());
 
             logger.info("User {} authenticated successfully", userDetails.getUsername());
+            ResponseCookie accessCookie = createAccessTokenCookie(jwt);
             ResponseCookie refreshCookie = createRefreshTokenCookie(refreshToken.getToken());
 
             return ResponseEntity
                     .ok()
+                    .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
                     .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
                     .body(new ControllerResponse<>(true, "User authenticated successfully",
                             jwtResponse, 200));
@@ -176,24 +178,26 @@ public class AuthService {
                     User user = refreshToken.getUser();
                     refreshTokenRepository.delete(refreshToken);
                     RefreshToken newRefreshToken = createRefreshToken(user.getId());
-                    
-                    String token = jwtUtils.generateAccessTokenFromUsername(user.getUsername());
-                    
+
+                    String newAccessToken = jwtUtils.generateAccessTokenFromUsername(user.getUsername());
+
                     UserDetailsImpl userDetails = UserDetailsImpl.build(user);
                     List<String> roles = userDetails.getAuthorities().stream()
                             .map(GrantedAuthority::getAuthority)
                             .collect(Collectors.toList());
 
-                    JwtResponse jwtResponse = new JwtResponse(token, "Bearer",
+                    JwtResponse jwtResponse = new JwtResponse(
                             userDetails.getId(),
                             userDetails.getUsername(),
                             userDetails.getEmail(),
                             roles, jwtUtils.getAccessTokenExpiryDate().toInstant(),
                             newRefreshToken.getExpiresAt());
 
+                    ResponseCookie accessCookie = createAccessTokenCookie(newAccessToken);
                     ResponseCookie refreshCookie = createRefreshTokenCookie(newRefreshToken.getToken());
 
                     return ResponseEntity.ok()
+                            .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
                             .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
                             .body(new ControllerResponse<>(true, "Access token refreshed successfully", jwtResponse, 200));
                 })
@@ -205,17 +209,24 @@ public class AuthService {
     public ResponseEntity<ControllerResponse<String>> logoutUser() {
         Object principle = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (principle.toString().equals("anonymousUser")) {
-             return ResponseEntity.ok().body(new ControllerResponse<>(true, "You have been logged out!", null, 200));
+            return ResponseEntity.ok().body(new ControllerResponse<>(true, "You have been logged out!", null, 200));
         }
-               ResponseCookie cleanCookie = ResponseCookie.from("refreshToken", "")
+        ResponseCookie clearAccessCookie = ResponseCookie.from("accessToken", "")
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(0)
+                .build();
+        ResponseCookie clearRefreshCookie = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
                 .secure(true)
                 .path("/api/auth/refresh")
-                .maxAge(0) // delete cookie
+                .maxAge(0)
                 .build();
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, cleanCookie.toString())
+                .header(HttpHeaders.SET_COOKIE, clearAccessCookie.toString())
+                .header(HttpHeaders.SET_COOKIE, clearRefreshCookie.toString())
                 .body(new ControllerResponse<>(true, "You have been logged out!", null, 200));
     }
     
@@ -414,9 +425,11 @@ public class AuthService {
                     .orElseGet(() -> createUserFromGooglePayload(payload, normalizedEmail));
 
             AuthTokens authTokens = buildJwtTokens(user);
+            ResponseCookie accessCookie = createAccessTokenCookie(authTokens.accessToken());
             ResponseCookie refreshCookie = createRefreshTokenCookie(authTokens.refreshToken());
 
             return ResponseEntity.ok()
+                    .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
                     .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
                     .body(new ControllerResponse<>(true, "Authenticated with Google",
                             authTokens.jwtResponse(), 200));
@@ -530,14 +543,13 @@ public class AuthService {
         Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null,
                 userDetails.getAuthorities());
         String accessToken = jwtUtils.generateJwtToken(authentication);
-        RefreshToken refreshToken = createRefreshToken(user.getId()); // Use persisted token
+        RefreshToken refreshToken = createRefreshToken(user.getId());
 
         List<String> roles = userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList());
 
-        JwtResponse jwtResponse = new JwtResponse(accessToken,
-                "Bearer",
+        JwtResponse jwtResponse = new JwtResponse(
                 userDetails.getId(),
                 userDetails.getUsername(),
                 userDetails.getEmail(),
@@ -545,8 +557,17 @@ public class AuthService {
                 jwtUtils.getAccessTokenExpiryDate().toInstant(),
                 refreshToken.getExpiresAt());
 
+        return new AuthTokens(jwtResponse, accessToken, refreshToken.getToken());
+    }
 
-        return new AuthTokens(jwtResponse, refreshToken.getToken());
+    private ResponseCookie createAccessTokenCookie(String accessToken) {
+        return ResponseCookie.from("accessToken", accessToken)
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .sameSite("Strict")
+                .maxAge(Duration.ofMillis(jwtUtils.getAccessTokenExpiryDate().getTime() - System.currentTimeMillis()))
+                .build();
     }
 
     private ResponseCookie createRefreshTokenCookie(String refreshToken) {
@@ -555,11 +576,11 @@ public class AuthService {
                 .secure(true)
                 .path("/api/auth/refresh")
                 .sameSite("Strict")
-                .maxAge(Duration.ofMillis(refreshTokenDurationMs)) 
+                .maxAge(Duration.ofMillis(refreshTokenDurationMs))
                 .build();
     }
 
-    private record AuthTokens(JwtResponse jwtResponse, String refreshToken) {
+    private record AuthTokens(JwtResponse jwtResponse, String accessToken, String refreshToken) {
     }
 
     private Duration getVerificationDuration() {

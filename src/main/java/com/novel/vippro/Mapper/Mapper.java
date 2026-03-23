@@ -192,5 +192,12 @@ public interface Mapper {
 
     Video CreateVideoDTOtoVideo(CreateVideoDTO dto);
 
-    void updateVideoFromDTO(VideoDTO dto, Video video);
+    void updateVideoFromDTO(com.novel.vippro.DTO.Video.UpdateVideoDTO dto, Video video);
+
+    // VideoSeries-related mappings
+    com.novel.vippro.DTO.VideoSeries.VideoSeriesDTO VideoSeriesToDTO(VideoSeries videoSeries);
+
+    VideoSeries CreateVideoSeriesDTOtoVideoSeries(com.novel.vippro.DTO.VideoSeries.CreateVideoSeriesDTO dto);
+
+    void updateVideoSeriesFromDTO(com.novel.vippro.DTO.VideoSeries.UpdateVideoSeriesDTO dto, VideoSeries videoSeries);
 }

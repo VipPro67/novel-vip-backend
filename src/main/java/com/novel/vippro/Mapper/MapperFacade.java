@@ -61,6 +61,7 @@ public class MapperFacade implements Mapper {
 	private final RatingMapper ratingMapper;
 	private final SystemJobMapper systemJobMapper;
 	private final VideoMapper videoMapper;
+	private final VideoSeriesMapper videoSeriesMapper;
 
 	// Novel-related mappings
 	@Override
@@ -420,8 +421,23 @@ public class MapperFacade implements Mapper {
 	}
 
 	@Override
-	public void updateVideoFromDTO(VideoDTO dto, Video video) {
+	public void updateVideoFromDTO(com.novel.vippro.DTO.Video.UpdateVideoDTO dto, Video video) {
 		videoMapper.updateVideoFromDTO(dto, video);
+	}
+
+	@Override
+	public com.novel.vippro.DTO.VideoSeries.VideoSeriesDTO VideoSeriesToDTO(VideoSeries videoSeries) {
+		return videoSeriesMapper.VideoSeriesToDTO(videoSeries);
+	}
+
+	@Override
+	public VideoSeries CreateVideoSeriesDTOtoVideoSeries(com.novel.vippro.DTO.VideoSeries.CreateVideoSeriesDTO dto) {
+		return videoSeriesMapper.CreateVideoSeriesDTOtoVideoSeries(dto);
+	}
+
+	@Override
+	public void updateVideoSeriesFromDTO(com.novel.vippro.DTO.VideoSeries.UpdateVideoSeriesDTO dto, VideoSeries videoSeries) {
+		videoSeriesMapper.updateVideoSeriesFromDTO(dto, videoSeries);
 	}
 
 }

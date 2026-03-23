@@ -1,12 +1,15 @@
 package com.novel.vippro.Services;
 
 import com.novel.vippro.DTO.Video.CreateVideoDTO;
+import com.novel.vippro.DTO.Video.UpdateVideoDTO;
 import com.novel.vippro.DTO.Video.VideoDTO;
 import com.novel.vippro.Mapper.Mapper;
 import com.novel.vippro.Models.Video;
+import com.novel.vippro.Models.VideoSeries;
 import com.novel.vippro.Models.Video.VideoPlatform;
 import com.novel.vippro.Payload.Response.PageResponse;
 import com.novel.vippro.Repository.VideoRepository;
+import com.novel.vippro.Repository.VideoSeriesRepository;
 import jakarta.persistence.EntityNotFoundException;
 import java.net.URI;
 import java.net.URLEncoder;
@@ -26,6 +29,9 @@ public class VideoService {
 
     @Autowired
     private VideoRepository videoRepository;
+
+    @Autowired
+    private VideoSeriesRepository videoSeriesRepository;
 
     @Autowired
     private Mapper mapper;
@@ -58,8 +64,57 @@ public class VideoService {
         video.setExternalId(externalId);
         video.setEmbedUrl(embedUrl);
 
+        if (request.videoSeriesId() != null) {
+            VideoSeries series = videoSeriesRepository.findById(request.videoSeriesId())
+                    .orElseThrow(() -> new EntityNotFoundException("Video Series not found"));
+            video.setVideoSeries(series);
+        }
+
         Video saved = videoRepository.save(video);
         return mapper.VideoToDTO(saved);
+    }
+
+    @Transactional
+    public VideoDTO updateVideo(UUID id, UpdateVideoDTO request) {
+        Video video = videoRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Video not found"));
+
+        if (!video.getVideoUrl().equals(request.videoUrl())) {
+            String rawUrl = request.videoUrl().trim();
+            URI uri = toUri(rawUrl);
+            VideoPlatform platform = detectPlatform(uri);
+            String externalId = platform == VideoPlatform.YOUTUBE ? extractYouTubeId(uri) : null;
+            String embedUrl = buildEmbedUrl(platform, rawUrl, externalId);
+            
+            if (platform == VideoPlatform.YOUTUBE && !StringUtils.hasText(externalId)) {
+                throw new IllegalArgumentException("Unable to extract YouTube video id from the provided URL");
+            }
+
+            video.setVideoUrl(rawUrl);
+            video.setPlatform(platform);
+            video.setExternalId(externalId);
+            video.setEmbedUrl(embedUrl);
+        }
+
+        mapper.updateVideoFromDTO(request, video);
+
+        if (request.videoSeriesId() != null) {
+            VideoSeries series = videoSeriesRepository.findById(request.videoSeriesId())
+                    .orElseThrow(() -> new EntityNotFoundException("Video Series not found"));
+            video.setVideoSeries(series);
+        } else {
+            video.setVideoSeries(null);
+        }
+
+        Video updated = videoRepository.save(video);
+        return mapper.VideoToDTO(updated);
+    }
+
+    @Transactional
+    public void deleteVideo(UUID id) {
+        Video video = videoRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Video not found"));
+        videoRepository.delete(video);
     }
 
     @Transactional(readOnly = true)

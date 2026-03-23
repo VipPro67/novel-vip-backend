@@ -20,7 +20,6 @@ import com.novel.vippro.Payload.Response.ControllerResponse;
 import com.novel.vippro.Payload.Response.JwtResponse;
 import com.novel.vippro.Services.AuthService;
 
-@CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/auth")
 @Tag(name = "Authentication", description = "Authentication management APIs")

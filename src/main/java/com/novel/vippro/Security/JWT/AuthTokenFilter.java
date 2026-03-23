@@ -7,6 +7,7 @@ import java.util.UUID;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -106,13 +107,23 @@ public class AuthTokenFilter extends OncePerRequestFilter {
   }
 
   private String parseJwt(HttpServletRequest request) {
-    String headerAuth = request.getHeader("Authorization");
+    // 1. Prefer the httpOnly accessToken cookie
+    Cookie[] cookies = request.getCookies();
+    if (cookies != null) {
+      for (Cookie cookie : cookies) {
+        if ("accessToken".equals(cookie.getName()) && StringUtils.hasText(cookie.getValue())) {
+          return cookie.getValue();
+        }
+      }
+    }
 
+    // 2. Fallback: Authorization header (useful for non-browser clients)
+    String headerAuth = request.getHeader("Authorization");
     if (StringUtils.hasText(headerAuth) && headerAuth.startsWith("Bearer ")) {
       return headerAuth.substring(7);
     }
 
-    // For SSE connections, also check query parameter
+    // 3. For SSE connections, also check query parameter
     String tokenParam = request.getParameter("token");
     if (StringUtils.hasText(tokenParam)) {
       return tokenParam;

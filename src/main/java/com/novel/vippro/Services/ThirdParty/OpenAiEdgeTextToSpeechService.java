@@ -19,7 +19,7 @@ import com.novel.vippro.Services.FileService;
 import com.novel.vippro.Services.TextToSpeechService;
 
 @Service("openAiEdgeTTS")
-@ConditionalOnProperty(name = "texttospeech.provider", havingValue = "openai-edge", matchIfMissing = true)
+@ConditionalOnProperty(name = "texttospeech.provider", havingValue = "openai-edge")
 public class OpenAiEdgeTextToSpeechService implements TextToSpeechService {
 
     private static final Logger logger = LoggerFactory.getLogger(OpenAiEdgeTextToSpeechService.class);

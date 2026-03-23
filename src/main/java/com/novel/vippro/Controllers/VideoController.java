@@ -1,6 +1,7 @@
 package com.novel.vippro.Controllers;
 
 import com.novel.vippro.DTO.Video.CreateVideoDTO;
+import com.novel.vippro.DTO.Video.UpdateVideoDTO;
 import com.novel.vippro.DTO.Video.VideoDTO;
 import com.novel.vippro.Payload.Response.ControllerResponse;
 import com.novel.vippro.Payload.Response.PageResponse;
@@ -19,9 +20,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -82,5 +85,35 @@ public class VideoController {
             @Parameter(description = "Video identifier", required = true) @PathVariable UUID id) {
         VideoDTO video = videoService.getVideo(id);
         return ControllerResponse.success("Video retrieved successfully", video);
+    }
+
+    @Operation(summary = "Update video", description = "Update an existing video entry (admin only)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Video updated successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid video data"),
+            @ApiResponse(responseCode = "403", description = "Not authorized"),
+            @ApiResponse(responseCode = "404", description = "Video not found")
+    })
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ControllerResponse<VideoDTO> updateVideo(
+            @Parameter(description = "Video identifier", required = true) @PathVariable UUID id,
+            @Parameter(description = "Updated video details", required = true) @Valid @RequestBody UpdateVideoDTO request) {
+        VideoDTO updated = videoService.updateVideo(id, request);
+        return ControllerResponse.success("Video updated successfully", updated);
+    }
+
+    @Operation(summary = "Delete video", description = "Delete an existing video entry (admin only)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Video deleted successfully"),
+            @ApiResponse(responseCode = "403", description = "Not authorized"),
+            @ApiResponse(responseCode = "404", description = "Video not found")
+    })
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ControllerResponse<Void> deleteVideo(
+            @Parameter(description = "Video identifier", required = true) @PathVariable UUID id) {
+        videoService.deleteVideo(id);
+        return ControllerResponse.success("Video deleted successfully",null);
     }
 }

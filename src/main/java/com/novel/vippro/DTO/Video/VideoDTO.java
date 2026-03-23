@@ -14,6 +14,7 @@ public record VideoDTO(
     String embedUrl,
     VideoPlatform platform,
     String externalId,
+    UUID videoSeriesId,
     Instant createdAt,
     Instant updatedAt
 ) {}

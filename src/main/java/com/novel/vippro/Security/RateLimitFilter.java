@@ -2,7 +2,9 @@ package com.novel.vippro.Security;
 
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
+import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.Refill;
+import io.github.bucket4j.distributed.proxy.ProxyManager;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -14,23 +16,22 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.time.Duration;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 
 @Component
 public class RateLimitFilter implements Filter {
 
-    private final Map<String, Bucket> cache = new ConcurrentHashMap<>();
+    private final ProxyManager<String> proxyManager;
+    private final Supplier<BucketConfiguration> bucketConfigurationSupplier;
 
-    private Bucket resolveBucket(String ip) {
-        return cache.computeIfAbsent(ip, this::newBucket);
-    }
-
-    private Bucket newBucket(String apiKey) {
-        Bandwidth limit = Bandwidth.classic(100, Refill.greedy(100, Duration.ofMinutes(1)));
-        return Bucket.builder()
-                .addLimit(limit)
-                .build();
+    public RateLimitFilter(ProxyManager<String> proxyManager) {
+        this.proxyManager = proxyManager;
+        this.bucketConfigurationSupplier = () -> {
+            Bandwidth limit = Bandwidth.classic(100, Refill.greedy(100, Duration.ofMinutes(1)));
+            return BucketConfiguration.builder()
+                    .addLimit(limit)
+                    .build();
+        };
     }
 
     @Override
@@ -41,7 +42,7 @@ public class RateLimitFilter implements Filter {
 
         if (request.getRequestURI().startsWith("/api/")) {
             String ip = getClientIP(request);
-            Bucket bucket = resolveBucket(ip);
+            Bucket bucket = proxyManager.builder().build(ip, bucketConfigurationSupplier);
 
             if (bucket.tryConsume(1)) {
                 filterChain.doFilter(servletRequest, servletResponse);

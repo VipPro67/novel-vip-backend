@@ -23,6 +23,15 @@ import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.SerializationException;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
+import io.github.bucket4j.distributed.proxy.ProxyManager;
+import io.github.bucket4j.redis.lettuce.cas.LettuceBasedProxyManager;
+import io.lettuce.core.RedisClient;
+import io.lettuce.core.RedisURI;
+import io.lettuce.core.api.StatefulRedisConnection;
+import io.lettuce.core.codec.ByteArrayCodec;
+import io.lettuce.core.codec.RedisCodec;
+import io.lettuce.core.codec.StringCodec;
 
 import java.time.Duration;
 import java.util.HashMap;
@@ -95,6 +104,31 @@ public class RedisConfig {
 
 		template.afterPropertiesSet();
 		return template;
+	}
+
+	@Bean
+	public RedisClient redisClient() {
+		RedisURI uri = RedisURI.builder()
+				.withHost(redisHost)
+				.withPort(redisPort)
+				.withSsl(redisSsl)
+				.build();
+		if (redisUsername != null && !redisUsername.isBlank()) {
+			uri.setUsername(redisUsername);
+		}
+		if (redisPassword != null && !redisPassword.isBlank()) {
+			uri.setPassword(redisPassword.toCharArray());
+		}
+		return RedisClient.create(uri);
+	}
+
+	@Bean
+	public ProxyManager<String> proxyManager(RedisClient redisClient) {
+		StatefulRedisConnection<String, byte[]> connection = redisClient
+				.connect(RedisCodec.of(StringCodec.UTF8, new ByteArrayCodec()));
+		return LettuceBasedProxyManager.builderFor(connection)
+				.withExpirationStrategy(ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(Duration.ofMinutes(1)))
+				.build();
 	}
 
 	@Bean

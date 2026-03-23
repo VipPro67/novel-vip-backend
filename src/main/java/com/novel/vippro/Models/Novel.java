@@ -118,4 +118,8 @@ public class Novel extends BaseEntity {
 
 	@Column(name = "last_view_reset")
 	private LocalDateTime lastViewReset;
+
+	@ManyToMany(fetch = FetchType.LAZY)
+	@JoinTable(name = "novel_video_series", joinColumns = @JoinColumn(name = "novel_id"), inverseJoinColumns = @JoinColumn(name = "video_series_id"))
+	private Set<VideoSeries> videoSeriesList = new HashSet<>();
 }

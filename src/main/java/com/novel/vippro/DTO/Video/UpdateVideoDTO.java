@@ -2,8 +2,9 @@ package com.novel.vippro.DTO.Video;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import java.util.UUID;
 
-public record CreateVideoDTO(
+public record UpdateVideoDTO(
     @NotBlank
     @Size(max = 255)
     String title,
@@ -15,5 +16,5 @@ public record CreateVideoDTO(
     @Size(max = 1024)
     String videoUrl,
 
-    java.util.UUID videoSeriesId
+    UUID videoSeriesId
 ) {}
