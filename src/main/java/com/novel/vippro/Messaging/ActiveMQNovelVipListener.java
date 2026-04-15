@@ -7,23 +7,25 @@ import org.springframework.stereotype.Component;
 import com.novel.vippro.DTO.Comment.CommentDTO;
 import com.novel.vippro.DTO.Notification.NotificationDTO;
 
+import com.novel.vippro.Controllers.NotificationStreamController;
+
 @Component
 @ConditionalOnProperty(name = "app.messaging.provider", havingValue = "activemq")
 public class ActiveMQNovelVipListener {
 
-    private final NovelVipPublisher publisher;
+    private final NotificationStreamController notificationStreamController;
 
-    public ActiveMQNovelVipListener(NovelVipPublisher publisher) {
-        this.publisher = publisher;
+    public ActiveMQNovelVipListener(NotificationStreamController notificationStreamController) {
+        this.notificationStreamController = notificationStreamController;
     }
 
     @JmsListener(destination = MessageQueues.NOTIFICATION)
     public void handleNotification(NotificationDTO notification) {
-        publisher.publishNotification(notification);
+        notificationStreamController.sendNotificationToUser(notification.userId(), notification);
     }
 
     @JmsListener(destination = MessageQueues.COMMENT)
     public void handleComment(CommentDTO comment) {
-        publisher.publishComment(comment);
+        // SSE is standard, no WS push needed
     }
 }

@@ -6,7 +6,6 @@ import com.novel.vippro.Models.Novel;
 import com.novel.vippro.Repository.NovelRepository;
 import lombok.RequiredArgsConstructor;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -17,7 +16,6 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "search.provider", havingValue = "postgres", matchIfMissing = true)
 public class PostgresSearchService implements SearchService {
 
     private final NovelRepository novelRepository;

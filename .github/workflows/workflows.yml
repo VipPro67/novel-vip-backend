@@ -26,16 +26,14 @@ jobs:
           ssh -i ~/.ssh/id_ed25519 deploy@${{ secrets.HOST }} << 'EOF'
             set -e
             # 1. Go to the parent directory
-            cd /home/deploy/novel-vip
+            cd /home/deploy/novel-vip-backend
 
             # 2. Update the parent repo and the submodules
             git fetch origin main
-            git reset --hard origin/main
-            git submodule update --init --recursive
+            git pull
 
             # 3. Build and Restart
             echo "🧱 Rebuilding Docker containers..."
-            cd backend
             docker compose down
             docker compose up -d --build
           EOF

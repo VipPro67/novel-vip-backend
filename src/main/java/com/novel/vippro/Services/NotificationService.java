@@ -1,6 +1,7 @@
 package com.novel.vippro.Services;
 
 import com.novel.vippro.DTO.Notification.NotificationDTO;
+import com.novel.vippro.Controllers.NotificationStreamController;
 import com.novel.vippro.DTO.Notification.CreateNotificationDTO;
 import com.novel.vippro.Mapper.Mapper;
 import com.novel.vippro.Models.Notification;
@@ -12,6 +13,7 @@ import com.novel.vippro.Repository.UserRepository;
 import com.novel.vippro.Security.UserDetailsImpl;
 
 import jakarta.persistence.EntityNotFoundException;
+import lombok.AllArgsConstructor;
 
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.UUID;
 
 @Service
+@AllArgsConstructor
 public class NotificationService {
 
     @Autowired
@@ -30,7 +33,6 @@ public class NotificationService {
     private UserRepository userRepository;
     @Autowired
     private Mapper mapper;
-
     @Autowired
     private MessagePublisher messagePublisher;
 

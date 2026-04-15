@@ -41,7 +41,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "search.provider", havingValue = "elasticsearch", matchIfMissing = true)
+@ConditionalOnProperty(name = "search.provider", havingValue = "elasticsearch")
 public class ElasticsearchSearchService implements SearchService {
 
     private static final Logger logger = LoggerFactory.getLogger(ElasticsearchSearchService.class);

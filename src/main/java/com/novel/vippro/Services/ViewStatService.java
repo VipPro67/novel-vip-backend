@@ -74,9 +74,9 @@ public class ViewStatService {
         }
     }
 
-    @Scheduled(fixedDelay = 300000)
+    @Scheduled(cron = "1 0 0 * * *")
     public void syncViewCountsToDb() {
-        logger.info("Starting scheduled view count sync from Redis to DB...");
+        logger.info("Run daily at 00:00:01");
         Set<UUID> novelIds = redisViewStatService.getPendingSyncNovels();
         
         int syncedCount = 0;

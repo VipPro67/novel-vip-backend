@@ -26,7 +26,7 @@ public class HttpLoggingFilter implements jakarta.servlet.Filter {
 		HttpServletRequest request = (HttpServletRequest) req;
 		HttpServletResponse response = (HttpServletResponse) res;
 		String uri = request.getRequestURI();
-		if (uri.contains("/actuator") || uri.contains("/ws")) {
+		if (uri.contains("/actuator") || uri.contains("/ws") || uri.contains("/stream")) {
 			chain.doFilter(req, res);
 			return; 
 		}

@@ -1,11 +1,14 @@
 package com.novel.vippro.Messaging;
 
+import com.novel.vippro.Controllers.NotificationStreamController;
 import com.novel.vippro.DTO.Notification.CreateNotificationDTO;
 import com.novel.vippro.Messaging.payload.ChapterAudioMessage;
 import com.novel.vippro.Models.Chapter;
 import com.novel.vippro.Models.NotificationType;
 import com.novel.vippro.Services.ChapterService;
 import com.novel.vippro.Services.NotificationService;
+
+import lombok.AllArgsConstructor;
 
 import java.util.concurrent.TimeUnit;
 
@@ -16,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@AllArgsConstructor
 public class ChapterAudioProcessor {
 
     private static final Logger logger = LoggerFactory.getLogger(ChapterAudioProcessor.class);
@@ -23,18 +27,7 @@ public class ChapterAudioProcessor {
     private final ChapterService chapterService;
     private final EpubImportProcessor epubImportProcessor;
     private final NotificationService notificationService;
-    private final NovelVipPublisher novelVipPublisher;
-
-    public ChapterAudioProcessor(ChapterService chapterService,
-            EpubImportProcessor epubImportProcessor,
-            NotificationService notificationService,
-            NovelVipPublisher novelVipPublisher) {
-        this.chapterService = chapterService;
-        this.epubImportProcessor = epubImportProcessor;
-        this.notificationService = notificationService;
-        this.novelVipPublisher = novelVipPublisher;
-    }
-
+	
     @Transactional
     public void process(ChapterAudioMessage message) {
         try {
@@ -46,17 +39,6 @@ public class ChapterAudioProcessor {
             Chapter chapter = chapterService.ensureChapterAudioGenerated(message.getChapterId());
             epubImportProcessor.markChapterAudioComplete(message.getJobId());
             notifySuccess(message, chapter);
-
-            // Push real-time WebSocket notification so the frontend immediately
-            // gets the audio URL without waiting for the polling fallback.
-            if (chapter.getAudioFile() != null) {
-                try {
-                    novelVipPublisher.publishAudioReady(
-                            message.getChapterId().toString());
-                } catch (Exception ex) {
-                    logger.warn("Failed to push audio-ready WebSocket event for chapter {}", message.getChapterId(), ex);
-                }
-            }
         } catch (Exception ex) {
             logger.error("Failed to generate audio for chapter {}", message.getChapterId(), ex);
             epubImportProcessor.markJobFailed(message.getJobId(),

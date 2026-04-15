@@ -565,7 +565,7 @@ public class AuthService {
                 .httpOnly(true)
                 .secure(true)
                 .path("/")
-                .sameSite("Strict")
+                .sameSite("None")
                 .maxAge(Duration.ofMillis(jwtUtils.getAccessTokenExpiryDate().getTime() - System.currentTimeMillis()))
                 .build();
     }
@@ -575,7 +575,7 @@ public class AuthService {
                 .httpOnly(true)
                 .secure(true)
                 .path("/api/auth/refresh")
-                .sameSite("Strict")
+                .sameSite("None")
                 .maxAge(Duration.ofMillis(refreshTokenDurationMs))
                 .build();
     }
