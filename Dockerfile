@@ -16,17 +16,18 @@ WORKDIR /app
 
 RUN apk add --no-cache curl
 
+RUN curl -L -o /app/opentelemetry-javaagent.jar \
+https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar
+
 COPY --from=build /app/target/novel-vippro-0.0.1-SNAPSHOT.jar app.jar
 
 EXPOSE 8081
 EXPOSE 5005
 
 ENTRYPOINT ["java", \
+    "-javaagent:/app/opentelemetry-javaagent.jar", \
     "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005",\
     "-Xms128m", \
     "-Xmx256m", \
-    "-XX:+UseSerialGC", \
-    "-XX:+OptimizeStringConcat", \
-    "-XX:+UseContainerSupport", \
     "-jar", \
     "app.jar"]
