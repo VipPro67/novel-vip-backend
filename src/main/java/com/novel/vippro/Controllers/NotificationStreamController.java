@@ -26,7 +26,11 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 @RestController
-@CrossOrigin(origins = "*")
+// IMPORTANT: SSE uses cookies (EventSource withCredentials) in this app.
+// Using "*" breaks credentialed CORS in browsers; keep this aligned with WebSecurityConfig.
+@CrossOrigin(
+        origins = { "https://novel-vip.vercel.app", "http://localhost:3000" },
+        allowCredentials = "true")
 @RequestMapping("/api/notifications")
 @Log4j2
 public class NotificationStreamController {
@@ -51,8 +55,9 @@ public class NotificationStreamController {
             Map<String, SseEmitter> deviceMap = userEntry.getValue();
             for (Map.Entry<String, SseEmitter> deviceEntry : deviceMap.entrySet()) {
                 try {
-                    deviceEntry.getValue().send(SseEmitter.event().comment("heartbeat"));
-                } catch (IOException e) {
+                    // Some proxies ignore comment-only frames; send a lightweight named event.
+                    deviceEntry.getValue().send(SseEmitter.event().name("heartbeat").data(""));
+                } catch (Exception e) {
                     deviceMap.remove(deviceEntry.getKey(), deviceEntry.getValue());
                 }
             }
@@ -114,8 +119,9 @@ public class NotificationStreamController {
             SseEmitter emitter = entry.getValue();
             try {
                 emitter.send(SseEmitter.event().name("notification").data(notification));
-				log.info("Success sendNotificationToUser");
-            } catch (IOException e) {
+                log.info("SSE notification sent to userId={} deviceId={}", userId, entry.getKey());
+            } catch (Exception e) {
+                log.warn("SSE send failed; removing emitter for userId={} deviceId={}", userId, entry.getKey(), e);
                 deviceMap.remove(entry.getKey(), emitter);
             }
         }

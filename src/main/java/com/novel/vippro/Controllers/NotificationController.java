@@ -32,7 +32,10 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@CrossOrigin(origins = "*")
+// Credentialed requests (cookies) require non-wildcard CORS origins in browsers.
+@CrossOrigin(
+        origins = { "https://novel-vip.vercel.app", "http://localhost:3000" },
+        allowCredentials = "true")
 @RequestMapping("/api/notifications")
 @Tag(name = "Notifications", description = "User notification management APIs")
 @SecurityRequirement(name = "bearerAuth")
